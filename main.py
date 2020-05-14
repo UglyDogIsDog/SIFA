@@ -9,7 +9,9 @@ import time
 
 import tensorflow as tf
 
-import data_loader, losses, model
+import data_loader
+import losses
+import model
 from stats_func import *
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -96,15 +98,17 @@ class SIFA:
                 model.IMG_WIDTH,
                 model.IMG_HEIGHT,
                 self._num_cls
-            ], name="gt_B") # for validation only, not used during training
+            ], name="gt_B")  # for validation only, not used during training
 
         self.keep_rate = tf.placeholder(tf.float32, shape=())
         self.is_training = tf.placeholder(tf.bool, shape=())
 
         self.num_fake_inputs = 0
 
-        self.learning_rate_gan = tf.placeholder(tf.float32, shape=[], name="lr_gan")
-        self.learning_rate_seg = tf.placeholder(tf.float32, shape=[], name="lr_seg")
+        self.learning_rate_gan = tf.placeholder(
+            tf.float32, shape=[], name="lr_gan")
+        self.learning_rate_seg = tf.placeholder(
+            tf.float32, shape=[], name="lr_seg")
 
         self.lr_gan_summ = tf.summary.scalar("lr_gan", self.learning_rate_gan)
         self.lr_seg_summ = tf.summary.scalar("lr_seg", self.learning_rate_seg)
@@ -116,7 +120,8 @@ class SIFA:
             'fake_pool_b': self.fake_pool_B,
         }
 
-        outputs = model.get_outputs(inputs, skip=self._skip, is_training=self.is_training, keep_rate=self.keep_rate)
+        outputs = model.get_outputs(
+            inputs, skip=self._skip, is_training=self.is_training, keep_rate=self.keep_rate)
 
         self.prob_real_a_is_real = outputs['prob_real_a_is_real']
         self.prob_real_b_is_real = outputs['prob_real_b_is_real']
@@ -144,7 +149,7 @@ class SIFA:
         self.prob_fake_a_aux_is_real = outputs['prob_fake_a_aux_is_real']
         self.prob_fake_pool_a_aux_is_real = outputs['prob_fake_pool_a_aux_is_real']
         self.prob_cycle_a_aux_is_real = outputs['prob_cycle_a_aux_is_real']
-        
+
         self.predicter_fake_b = tf.nn.softmax(self.pred_mask_fake_b)
         self.compact_pred_fake_b = tf.argmax(self.predicter_fake_b, 3)
         self.compact_y_fake_b = tf.argmax(self.gt_a, 3)
@@ -153,11 +158,14 @@ class SIFA:
         self.compact_pred_b = tf.argmax(self.predicter_b, 3)
         self.compact_y_b = tf.argmax(self.gt_b, 3)
 
-        self.dice_fake_b_arr = dice_eval(self.compact_pred_fake_b, self.gt_a, self._num_cls)
+        self.dice_fake_b_arr = dice_eval(
+            self.compact_pred_fake_b, self.gt_a, self._num_cls)
         self.dice_fake_b_mean = tf.reduce_mean(self.dice_fake_b_arr)
-        self.dice_fake_b_mean_summ = tf.summary.scalar("dice_fake_b", self.dice_fake_b_mean)
+        self.dice_fake_b_mean_summ = tf.summary.scalar(
+            "dice_fake_b", self.dice_fake_b_mean)
 
-        self.dice_b_arr = dice_eval(self.compact_pred_b, self.gt_b, self._num_cls)
+        self.dice_b_arr = dice_eval(
+            self.compact_pred_b, self.gt_b, self._num_cls)
         self.dice_b_mean = tf.reduce_mean(self.dice_b_arr)
         self.dice_b_mean_summ = tf.summary.scalar("dice_b", self.dice_b_mean)
 
@@ -174,19 +182,26 @@ class SIFA:
 
         lsgan_loss_a = losses.lsgan_loss_generator(self.prob_fake_a_is_real)
         lsgan_loss_b = losses.lsgan_loss_generator(self.prob_fake_b_is_real)
-        lsgan_loss_p = losses.lsgan_loss_generator(self.prob_pred_mask_b_is_real)
-        lsgan_loss_p_ll = losses.lsgan_loss_generator(self.prob_pred_mask_b_ll_is_real)
-        lsgan_loss_a_aux = losses.lsgan_loss_generator(self.prob_fake_a_aux_is_real)
+        lsgan_loss_p = losses.lsgan_loss_generator(
+            self.prob_pred_mask_b_is_real)
+        lsgan_loss_p_ll = losses.lsgan_loss_generator(
+            self.prob_pred_mask_b_ll_is_real)
+        lsgan_loss_a_aux = losses.lsgan_loss_generator(
+            self.prob_fake_a_aux_is_real)
 
-        ce_loss_b, dice_loss_b = losses.task_loss(self.pred_mask_fake_b, self.gt_a)
-        ce_loss_b_ll, dice_loss_b_ll = losses.task_loss(self.pred_mask_fake_b_ll, self.gt_a)
-        l2_loss_b = tf.add_n([0.0001 * tf.nn.l2_loss(v) for v in tf.trainable_variables() if '/s_B/' in v.name or '/s_B_ll/' in v.name or '/e_B/' in v.name])
-
+        ce_loss_b, dice_loss_b = losses.task_loss(
+            self.pred_mask_fake_b, self.gt_a)
+        ce_loss_b_ll, dice_loss_b_ll = losses.task_loss(
+            self.pred_mask_fake_b_ll, self.gt_a)
+        l2_loss_b = tf.add_n([0.0001 * tf.nn.l2_loss(v) for v in tf.trainable_variables(
+        ) if '/s_B/' in v.name or '/s_B_ll/' in v.name or '/e_B/' in v.name])
 
         g_loss_A = cycle_consistency_loss_a + cycle_consistency_loss_b + lsgan_loss_b
         g_loss_B = cycle_consistency_loss_b + cycle_consistency_loss_a + lsgan_loss_a
 
-        seg_loss_B = ce_loss_b + dice_loss_b + l2_loss_b + 0.1 * (ce_loss_b_ll + dice_loss_b_ll) + 0.1 * g_loss_B + 0.1 * lsgan_loss_p + 0.01 * lsgan_loss_p_ll + 0.1 * lsgan_loss_a_aux
+        seg_loss_B = ce_loss_b + dice_loss_b + l2_loss_b + 0.1 * \
+            (ce_loss_b_ll + dice_loss_b_ll) + 0.1 * g_loss_B + 0.1 * \
+            lsgan_loss_p + 0.01 * lsgan_loss_p_ll + 0.1 * lsgan_loss_a_aux
 
         d_loss_A = losses.lsgan_loss_discriminator(
             prob_real_is_real=self.prob_real_a_is_real,
@@ -210,7 +225,8 @@ class SIFA:
             prob_fake_is_real=self.prob_pred_mask_b_ll_is_real,
         )
 
-        optimizer_gan = tf.train.AdamOptimizer(self.learning_rate_gan, beta1=0.5)
+        optimizer_gan = tf.train.AdamOptimizer(
+            self.learning_rate_gan, beta1=0.5)
         optimizer_seg = tf.train.AdamOptimizer(self.learning_rate_seg)
 
         self.model_vars = tf.trainable_variables()
@@ -221,17 +237,21 @@ class SIFA:
         e_B_vars = [var for var in self.model_vars if '/e_B/' in var.name]
         de_B_vars = [var for var in self.model_vars if '/de_B/' in var.name]
         s_B_vars = [var for var in self.model_vars if '/s_B/' in var.name]
-        s_B_ll_vars = [var for var in self.model_vars if '/s_B_ll/' in var.name]
+        s_B_ll_vars = [
+            var for var in self.model_vars if '/s_B_ll/' in var.name]
         d_P_vars = [var for var in self.model_vars if '/d_P/' in var.name]
-        d_P_ll_vars = [var for var in self.model_vars if '/d_P_ll/' in var.name]
+        d_P_ll_vars = [
+            var for var in self.model_vars if '/d_P_ll/' in var.name]
 
         self.d_A_trainer = optimizer_gan.minimize(d_loss_A, var_list=d_A_vars)
         self.d_B_trainer = optimizer_gan.minimize(d_loss_B, var_list=d_B_vars)
         self.g_A_trainer = optimizer_gan.minimize(g_loss_A, var_list=g_A_vars)
         self.g_B_trainer = optimizer_gan.minimize(g_loss_B, var_list=de_B_vars)
         self.d_P_trainer = optimizer_gan.minimize(d_loss_P, var_list=d_P_vars)
-        self.d_P_ll_trainer = optimizer_gan.minimize(d_loss_P_ll, var_list=d_P_ll_vars)
-        self.s_B_trainer = optimizer_seg.minimize(seg_loss_B, var_list=e_B_vars + s_B_vars + s_B_ll_vars)
+        self.d_P_ll_trainer = optimizer_gan.minimize(
+            d_loss_P_ll, var_list=d_P_ll_vars)
+        self.s_B_trainer = optimizer_seg.minimize(
+            seg_loss_B, var_list=e_B_vars + s_B_vars + s_B_ll_vars)
 
         for var in self.model_vars:
             print(var.name)
@@ -245,10 +265,12 @@ class SIFA:
         self.dice_B_loss_summ = tf.summary.scalar("dice_B_loss", dice_loss_b)
         self.l2_B_loss_summ = tf.summary.scalar("l2_B_loss", l2_loss_b)
         self.s_B_loss_summ = tf.summary.scalar("s_B_loss", seg_loss_B)
-        self.s_B_loss_merge_summ = tf.summary.merge([self.ce_B_loss_summ, self.dice_B_loss_summ, self.l2_B_loss_summ, self.s_B_loss_summ])
+        self.s_B_loss_merge_summ = tf.summary.merge(
+            [self.ce_B_loss_summ, self.dice_B_loss_summ, self.l2_B_loss_summ, self.s_B_loss_summ])
         self.d_P_loss_summ = tf.summary.scalar("d_P_loss", d_loss_P)
         self.d_P_ll_loss_summ = tf.summary.scalar("d_P_loss_ll", d_loss_P_ll)
-        self.d_P_loss_merge_summ = tf.summary.merge([self.d_P_loss_summ, self.d_P_ll_loss_summ])
+        self.d_P_loss_merge_summ = tf.summary.merge(
+            [self.d_P_loss_summ, self.d_P_ll_loss_summ])
 
     def save_images(self, sess, step):
 
@@ -277,18 +299,19 @@ class SIFA:
                 ], feed_dict={
                     self.input_a: inputs['images_i'],
                     self.input_b: inputs['images_j'],
-                    self.is_training:self._is_training_value,
+                    self.is_training: self._is_training_value,
                     self.keep_rate: self._keep_rate_value,
                 })
-
 
                 tensors = [inputs['images_i'], inputs['images_j'],
                            fake_B_temp, fake_A_temp, cyc_A_temp, cyc_B_temp]
 
                 for name, tensor in zip(names, tensors):
                     image_name = name + str(step) + "_" + str(i) + ".jpg"
-                    cv2.imwrite(os.path.join(self._images_dir, image_name), ((tensor[0] + 1) * 127.5).astype(np.uint8).squeeze())
-                    v_html.write("<img src=\"" + os.path.join('imgs', image_name) + "\">")
+                    cv2.imwrite(os.path.join(self._images_dir, image_name), ((
+                        tensor[0] + 1) * 127.5).astype(np.uint8).squeeze())
+                    v_html.write("<img src=\"" +
+                                 os.path.join('imgs', image_name) + "\">")
                 v_html.write("<br>")
 
     def fake_image_pool(self, num_fakes, fake, fake_pool):
@@ -308,8 +331,10 @@ class SIFA:
     def train(self):
 
         # Load Dataset
-        self.inputs = data_loader.load_data(self._source_train_pth, self._target_train_pth, True)
-        self.inputs_val = data_loader.load_data(self._source_val_pth, self._target_val_pth, True)
+        self.inputs = data_loader.load_data(
+            self._source_train_pth, self._target_train_pth, True)
+        self.inputs_val = data_loader.load_data(
+            self._source_val_pth, self._target_val_pth, True)
 
         # Build the network
         self.model_setup()
@@ -320,7 +345,7 @@ class SIFA:
         # Initializing the global variables
         init = (tf.global_variables_initializer(),
                 tf.local_variables_initializer())
-        saver = tf.train.Saver(max_to_keep=40)
+        saver = tf.train.Saver(max_to_keep=5)
 
         with open(self._source_train_pth, 'r') as fp:
             rows_s = fp.readlines()
@@ -362,7 +387,8 @@ class SIFA:
                     'gts_i': gts_i,
                     'gts_j': gts_j,
                 }
-                images_i_val, images_j_val, gts_i_val, gts_j_val = sess.run(self.inputs_val)
+                images_i_val, images_j_val, gts_i_val, gts_j_val = sess.run(
+                    self.inputs_val)
                 inputs_val = {
                     'images_i_val': images_i_val,
                     'images_j_val': images_j_val,
@@ -383,8 +409,8 @@ class SIFA:
                         self.gt_a:
                             inputs['gts_i'],
                         self.learning_rate_gan: curr_lr,
-                        self.keep_rate:self._keep_rate_value,
-                        self.is_training:self._is_training_value,
+                        self.keep_rate: self._keep_rate_value,
+                        self.is_training: self._is_training_value,
                     }
                 )
                 writer.add_summary(summary_str, cnt)
@@ -494,10 +520,10 @@ class SIFA:
                 writer.add_summary(summary_str, cnt)
 
                 summary_str_gan, summary_str_seg = sess.run([self.lr_gan_summ, self.lr_seg_summ],
-                         feed_dict={
-                             self.learning_rate_gan: curr_lr,
-                             self.learning_rate_seg: curr_lr_seg,
-                         })
+                                                            feed_dict={
+                    self.learning_rate_gan: curr_lr,
+                    self.learning_rate_seg: curr_lr_seg,
+                })
 
                 writer.add_summary(summary_str_gan, cnt)
                 writer.add_summary(summary_str_seg, cnt)
@@ -505,8 +531,9 @@ class SIFA:
                 writer.flush()
                 self.num_fake_inputs += 1
 
-                print ('iter {}: processing time {}'.format(cnt, time.time() - starttime))
-                
+                print('iter {}: processing time {}'.format(
+                    cnt, time.time() - starttime))
+
                 # batch evaluation
                 if (i + 1) % evaluation_interval == 0:
                     summary_str_fake_b, summary_str_b = sess.run([self.dice_fake_b_mean_summ, self.dice_b_mean_summ],
@@ -517,7 +544,7 @@ class SIFA:
                                                                      self.gt_b: inputs['gts_j'],
                                                                      self.is_training: False,
                                                                      self.keep_rate: 1.0,
-                                                                 })
+                    })
                     writer.add_summary(summary_str_fake_b, cnt)
                     writer.add_summary(summary_str_b, cnt)
                     writer.flush()
@@ -532,7 +559,7 @@ class SIFA:
                     writer_val.add_summary(summary_str, cnt)
                     writer_val.flush()
 
-                if (cnt+1) % save_interval ==0:
+                if (cnt+1) % save_interval == 0:
 
                     self.save_images(sess, cnt)
                     saver.save(sess, os.path.join(
@@ -544,7 +571,7 @@ class SIFA:
 
 
 def main(config_filename):
-    
+
     tf.set_random_seed(random_seed)
 
     with open(config_filename) as config_file:
