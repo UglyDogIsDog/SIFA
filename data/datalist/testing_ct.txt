@@ -1,0 +1,4 @@
+./data/testing_ct/ct_1003.tfrecords
+./data/testing_ct/ct_1008.tfrecords
+./data/testing_ct/ct_1014.tfrecords
+./data/testing_ct/ct_1019.tfrecords

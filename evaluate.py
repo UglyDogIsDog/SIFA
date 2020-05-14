@@ -13,7 +13,7 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 CHECKPOINT_PATH = './output/20200514-102632/sifa-5999'  # model path
 # path of the .txt file storing the test filenames
-TESTFILE_FID = './data/datalist/validation_ct.txt'
+TESTFILE_FID = './data/datalist/testing_ct.txt'
 TEST_MODALITY = 'CT'
 KEEP_RATE = 0.5
 IS_TRAINING = False
