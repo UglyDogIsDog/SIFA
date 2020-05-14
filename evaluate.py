@@ -11,7 +11,7 @@ from stats_func import *
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-CHECKPOINT_PATH = './output/20200514-102632'  # model path
+CHECKPOINT_PATH = './output/20200514-102632/sifa-5999'  # model path
 # path of the .txt file storing the test filenames
 TESTFILE_FID = './data/datalist/validation_ct.txt'
 TEST_MODALITY = 'CT'
@@ -110,8 +110,6 @@ class SIFA:
 
     def read_lists(self, fid):
         """read test file list """
-
-        print(fid)
 
         with open(fid, 'r') as fd:
             _list = fd.readlines()
