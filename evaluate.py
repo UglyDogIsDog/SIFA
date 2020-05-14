@@ -11,11 +11,11 @@ from stats_func import *
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-CHECKPOINT_PATH = '' # model path
-BASE_FID = '' # folder path of test files
-TESTFILE_FID = '' # path of the .txt file storing the test filenames
+CHECKPOINT_PATH = './output/20200514-102632'  # model path
+# path of the .txt file storing the test filenames
+TESTFILE_FID = './data/datalist/validation_ct.txt'
 TEST_MODALITY = 'CT'
-KEEP_RATE = 1.0
+KEEP_RATE = 0.5
 IS_TRAINING = False
 BATCH_SIZE = 128
 
@@ -45,8 +45,7 @@ class SIFA:
         self._skip = bool(config['skip'])
         self._num_cls = int(config['num_cls'])
 
-        self.base_fd = BASE_FID
-        self.test_fid = BASE_FID + '/' + TESTFILE_FID
+        self.test_fid = TESTFILE_FID
 
     def model_setup(self):
 
@@ -100,7 +99,8 @@ class SIFA:
             'fake_pool_b': self.fake_pool_B,
         }
 
-        outputs = model.get_outputs(inputs, skip=self._skip, is_training=self.is_training, keep_rate=self.keep_rate)
+        outputs = model.get_outputs(
+            inputs, skip=self._skip, is_training=self.is_training, keep_rate=self.keep_rate)
 
         self.pred_mask_b = outputs['pred_mask_b']
 
@@ -116,7 +116,7 @@ class SIFA:
 
         my_list = []
         for _item in _list:
-            my_list.append(self.base_fd + '/' + _item.split('\n')[0])
+            my_list.append(_item.split('\n')[0])
         return my_list
 
     def label_decomp(self, label_batch):
@@ -131,7 +131,7 @@ class SIFA:
                 continue
             _n_slice = np.zeros(label_batch.shape)
             _n_slice[label_batch == i] = 1
-            _vol = np.concatenate( (_vol, _n_slice[..., np.newaxis]), axis = 3 )
+            _vol = np.concatenate((_vol, _n_slice[..., np.newaxis]), axis=3)
         return np.float32(_vol)
 
     def test(self):
@@ -167,18 +167,27 @@ class SIFA:
 
                 frame_list = [kk for kk in range(data.shape[2])]
                 for ii in range(int(np.floor(data.shape[2] // self.batch_size))):
-                    data_batch = np.zeros([self.batch_size, data_size[0], data_size[1], data_size[2]])
-                    label_batch = np.zeros([self.batch_size, label_size[0], label_size[1]])
+                    data_batch = np.zeros(
+                        [self.batch_size, data_size[0], data_size[1], data_size[2]])
+                    label_batch = np.zeros(
+                        [self.batch_size, label_size[0], label_size[1]])
                     for idx, jj in enumerate(frame_list[ii * self.batch_size: (ii + 1) * self.batch_size]):
-                        data_batch[idx, ...] = np.expand_dims(data[..., jj].copy(), 3)
+                        data_batch[idx, ...] = np.expand_dims(
+                            data[..., jj].copy(), 3)
                         label_batch[idx, ...] = label[..., jj].copy()
                     label_batch = self.label_decomp(label_batch)
-                    if TEST_MODALITY=='CT':
-                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -2.8), np.subtract(3.2, -2.8)), 2.0),1) # {-2.8, 3.2} need to be changed according to the data statistics
-                    elif TEST_MODALITY=='MR':
-                        data_batch = np.subtract(np.multiply(np.divide(np.subtract(data_batch, -1.8), np.subtract(4.4, -1.8)), 2.0),1)  # {-1.8, 4.4} need to be changed according to the data statistics
+                    if TEST_MODALITY == 'CT':
+                        # {-2.8, 3.2} need to be changed according to the data statistics
+                        data_batch = np.subtract(np.multiply(
+                            np.divide(np.subtract(data_batch, -2.8), np.subtract(3.2, -2.8)), 2.0), 1)
+                    elif TEST_MODALITY == 'MR':
+                        # {-1.8, 4.4} need to be changed according to the data statistics
+                        data_batch = np.subtract(np.multiply(
+                            np.divide(np.subtract(data_batch, -1.8), np.subtract(4.4, -1.8)), 2.0), 1)
 
-                    compact_pred_b_val = sess.run(self.compact_pred_b, feed_dict={self.input_b: data_batch, self.gt_b: label_batch})
+                    #compact_pred_b_val = sess.run(self.predicter_b, feed_dict={self.input_b: data_batch})
+                    compact_pred_b_val = sess.run(self.compact_pred_b, feed_dict={
+                                                  self.input_b: data_batch, self.gt_b: label_batch})
 
                     for idx, jj in enumerate(frame_list[ii * self.batch_size: (ii + 1) * self.batch_size]):
                         tmp_pred[..., jj] = compact_pred_b_val[idx, ...].copy()
@@ -190,8 +199,10 @@ class SIFA:
                     pred_gt_data_tr = label.copy()
                     pred_gt_data_tr[pred_gt_data_tr != c] = 0
 
-                    dice_list.append(mmb.dc(pred_test_data_tr, pred_gt_data_tr))
-                    assd_list.append(mmb.assd(pred_test_data_tr, pred_gt_data_tr))
+                    dice_list.append(
+                        mmb.dc(pred_test_data_tr, pred_gt_data_tr))
+                    assd_list.append(
+                        mmb.assd(pred_test_data_tr, pred_gt_data_tr))
 
             dice_arr = 100 * np.reshape(dice_list, [4, -1]).transpose()
 
