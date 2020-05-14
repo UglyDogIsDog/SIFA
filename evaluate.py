@@ -9,6 +9,8 @@ import tensorflow as tf
 import model
 from stats_func import *
 
+import data_loader
+
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 CHECKPOINT_PATH = './output/20200514-102632/sifa-5999'  # model path
@@ -150,6 +152,8 @@ class SIFA:
 
             dice_list = []
             assd_list = []
+
+            '''
             for idx_file, fid in enumerate(test_list):
                 _npz_dict = np.load(fid)
                 data = _npz_dict['arr_0']
@@ -184,8 +188,23 @@ class SIFA:
                         # {-1.8, 4.4} need to be changed according to the data statistics
                         data_batch = np.subtract(np.multiply(
                             np.divide(np.subtract(data_batch, -1.8), np.subtract(4.4, -1.8)), 2.0), 1)
+                            '''
 
-                    #compact_pred_b_val = sess.run(self.predicter_b, feed_dict={self.input_b: data_batch})
+            inputs = data_loader.load_data(
+                './data/datalist/training_mr.txt', './data/datalist/training_ct.txt', True)
+            images_i, images_j, gts_i, gts_j = sess.run(inputs)
+            inputs = {
+                'images_i': images_i,
+                'images_j': images_j,
+                'gts_i': gts_i,
+                'gts_j': gts_j,
+            }
+
+            print(inputs['images_j'].shape)
+
+            '''
+
+                    # compact_pred_b_val = sess.run(self.predicter_b, feed_dict={self.input_b: data_batch})
                     compact_pred_b_val = sess.run(self.compact_pred_b, feed_dict={
                                                   self.input_b: data_batch, self.gt_b: label_batch})
 
@@ -227,6 +246,7 @@ class SIFA:
             print 'LVC:%.1f(%.1f)' % (assd_mean[2], assd_std[2])
             print 'Myo:%.1f(%.1f)' % (assd_mean[0], assd_std[0])
             print 'Mean:%.1f' % np.mean(assd_mean)
+            '''
 
 
 def main(config_filename):
