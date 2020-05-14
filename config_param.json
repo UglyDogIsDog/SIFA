@@ -9,13 +9,12 @@
   "_LAMBDA_B": 10,
   "skip": 1,
   "num_cls": 5,
-  "base_lr":0.0002,
+  "base_lr": 0.0002,
   "max_step": 20000,
-  "keep_rate_value": 1.0,
+  "keep_rate_value": 0.5,
   "is_training_value": 1,
   "batch_size": 8,
   "lr_gan_decay": 0,
   "to_restore": 0,
   "checkpoint_dir": " "
 }
-
