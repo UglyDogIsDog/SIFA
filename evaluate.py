@@ -151,7 +151,7 @@ class SIFA:
             dice_list = []
             assd_list = []
             for idx_file, fid in enumerate(test_list):
-                _npz_dict = np.load(fid)
+                _npz_dict = np.load(fid, allow_pickle=True)
                 data = _npz_dict['arr_0']
                 label = _npz_dict['arr_1']
 
