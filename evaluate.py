@@ -111,6 +111,8 @@ class SIFA:
     def read_lists(self, fid):
         """read test file list """
 
+        print(fid)
+
         with open(fid, 'r') as fd:
             _list = fd.readlines()
 
