@@ -161,6 +161,9 @@ class SIFA:
             dice_list = []
             assd_list = []
 
+            coord = tf.train.Coordinator()
+            threads = tf.train.start_queue_runners(coord=coord)
+
             '''
             for idx_file, fid in enumerate(test_list):
                 _npz_dict = np.load(fid)
