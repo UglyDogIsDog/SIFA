@@ -16,7 +16,7 @@ from stats_func import *
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-save_interval = 300
+save_interval = 500
 evaluation_interval = 10
 random_seed = 1234
 
@@ -554,7 +554,7 @@ class SIFA:
                     writer_val.add_summary(summary_str, cnt)
                     writer_val.flush()
 
-                if (cnt+1) % save_interval == 0:
+                if cnt % save_interval == 0 and cnt > 0:
 
                     self.save_images(sess, cnt)
                     saver.save(sess, os.path.join(
