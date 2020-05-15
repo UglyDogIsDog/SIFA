@@ -347,11 +347,6 @@ class SIFA:
                 tf.local_variables_initializer())
         saver = tf.train.Saver(max_to_keep=5)
 
-        with open(self._source_train_pth, 'r') as fp:
-            rows_s = fp.readlines()
-        with open(self._target_train_pth, 'r') as fp:
-            rows_t = fp.readlines()
-
         gpu_options = tf.GPUOptions(allow_growth=True)
         with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
             sess.run(init)

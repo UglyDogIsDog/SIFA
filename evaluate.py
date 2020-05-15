@@ -139,13 +139,17 @@ class SIFA:
     def test(self):
         """Test Function."""
 
+        inputs = data_loader.load_data(
+            './data/datalist/training_mr.txt', './data/datalist/training_ct.txt', True)
+
         self.model_setup()
         saver = tf.train.Saver()
         init = tf.global_variables_initializer()
 
         test_list = self.read_lists(self.test_fid)
 
-        with tf.Session() as sess:
+        gpu_options = tf.GPUOptions(allow_growth=True)
+        with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
             sess.run(init)
 
             saver.restore(sess, self.checkpoint_pth)
@@ -190,8 +194,6 @@ class SIFA:
                             np.divide(np.subtract(data_batch, -1.8), np.subtract(4.4, -1.8)), 2.0), 1)
                             '''
 
-            inputs = data_loader.load_data(
-                './data/datalist/training_mr.txt', './data/datalist/training_ct.txt', True)
             images_i, images_j, gts_i, gts_j = sess.run(inputs)
             inputs = {
                 'images_i': images_i,
