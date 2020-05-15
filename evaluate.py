@@ -219,7 +219,7 @@ class SIFA:
                     self.samples = SAMPLES
 
                     pred_b = np.zeros(
-                        (self.samples, inputs['images_j'].shape[0:3], 5))
+                        (self.samples, inputs['images_j'].shape[0], model.IMG_WIDTH, model.IMG_HEIGHT, self._num_cls))
 
                     for i in range(self.samples):
                         pred_b[i] = sess.run(self.predicter_b, feed_dict={
