@@ -140,7 +140,7 @@ class SIFA:
         """Test Function."""
 
         inputs = data_loader.load_data(
-            './data/datalist/training_mr.txt', './data/datalist/training_ct.txt', True)
+            './data/datalist/training_mr.txt', './data/datalist/training_ct.txt', self.batch_size, False)
 
         print(1)
 
@@ -202,17 +202,27 @@ class SIFA:
                             '''
             print(3)
 
-            images_i, images_j, gts_i, gts_j = sess.run(inputs)
-            inputs = {
-                'images_i': images_i,
-                'images_j': images_j,
-                'gts_i': gts_i,
-                'gts_j': gts_j,
-            }
+            try:
+                # in most cases coord.should_stop() will return True
+                # when there are no more samples to read
+                # if num_epochs=0 then it will run for ever
+                while not coord.should_stop():
 
-            print(4)
+                    images_i, images_j, gts_i, gts_j = sess.run(inputs)
+                    inputs = {
+                        'images_i': images_i,
+                        'images_j': images_j,
+                        'gts_i': gts_i,
+                        'gts_j': gts_j,
+                    }
 
-            print(inputs['images_j'].shape)
+                    print(4)
+
+                    print(inputs['images_j'].shape)
+
+            finally:
+                coord.request_stop()
+                coord.join(threads)
 
             '''
 

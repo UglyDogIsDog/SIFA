@@ -1,22 +1,17 @@
 import tensorflow as tf
 import json
 
-with open('./config_param.json') as config_file:
-    config = json.load(config_file)
-
-BATCH_SIZE = int(config['batch_size'])
-
 
 def _decode_samples(image_list, shuffle=False):
     decomp_feature = {
         # image size, dimensions of 3 consecutive slices
-        'dsize_dim0': tf.FixedLenFeature([], tf.int64), # 256
-        'dsize_dim1': tf.FixedLenFeature([], tf.int64), # 256
-        'dsize_dim2': tf.FixedLenFeature([], tf.int64), # 3
+        'dsize_dim0': tf.FixedLenFeature([], tf.int64),  # 256
+        'dsize_dim1': tf.FixedLenFeature([], tf.int64),  # 256
+        'dsize_dim2': tf.FixedLenFeature([], tf.int64),  # 3
         # label size, dimension of the middle slice
-        'lsize_dim0': tf.FixedLenFeature([], tf.int64), # 256
-        'lsize_dim1': tf.FixedLenFeature([], tf.int64), # 256
-        'lsize_dim2': tf.FixedLenFeature([], tf.int64), # 1
+        'lsize_dim0': tf.FixedLenFeature([], tf.int64),  # 256
+        'lsize_dim1': tf.FixedLenFeature([], tf.int64),  # 256
+        'lsize_dim2': tf.FixedLenFeature([], tf.int64),  # 1
         # image slices of size [256, 256, 3]
         'data_vol': tf.FixedLenFeature([], tf.string),
         # label slice of size [256, 256, 1]
@@ -29,7 +24,8 @@ def _decode_samples(image_list, shuffle=False):
     data_queue = tf.train.string_input_producer(image_list, shuffle=shuffle)
     reader = tf.TFRecordReader()
     fid, serialized_example = reader.read(data_queue)
-    parser = tf.parse_single_example(serialized_example, features=decomp_feature)
+    parser = tf.parse_single_example(
+        serialized_example, features=decomp_feature)
 
     data_vol = tf.decode_raw(parser['data_vol'], tf.float32)
     data_vol = tf.reshape(data_vol, raw_size)
@@ -60,27 +56,32 @@ def _load_samples(source_pth, target_pth):
     return data_vola, data_volb, label_vola, label_volb
 
 
-def load_data(source_pth, target_pth, do_shuffle=True):
+def load_data(source_pth, target_pth, batch_size, do_shuffle=True):
 
     image_i, image_j, gt_i, gt_j = _load_samples(source_pth, target_pth)
 
     # For converting the value range to be [-1 1] using the equation 2*[(x-x_min)/(x_max-x_min)]-1.
     # The values {-1.8, 4.4, -2.8, 3.2} need to be changed according to the statistics of specific datasets
     if 'mr' in source_pth:
-        image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -1.8), tf.subtract(4.4, -1.8)), 2.0), 1)
+        image_i = tf.subtract(tf.multiply(
+            tf.div(tf.subtract(image_i, -1.8), tf.subtract(4.4, -1.8)), 2.0), 1)
     elif 'ct' in source_pth:
-        image_i = tf.subtract(tf.multiply(tf.div(tf.subtract(image_i, -2.8), tf.subtract(3.2, -2.8)), 2.0), 1)
+        image_i = tf.subtract(tf.multiply(
+            tf.div(tf.subtract(image_i, -2.8), tf.subtract(3.2, -2.8)), 2.0), 1)
 
     if 'ct' in target_pth:
-        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_j, -2.8), tf.subtract(3.2, -2.8)), 2.0), 1)
+        image_j = tf.subtract(tf.multiply(
+            tf.div(tf.subtract(image_j, -2.8), tf.subtract(3.2, -2.8)), 2.0), 1)
     elif 'mr' in target_pth:
-        image_j = tf.subtract(tf.multiply(tf.div(tf.subtract(image_j, -1.8), tf.subtract(4.4, -1.8)), 2.0), 1)
-
+        image_j = tf.subtract(tf.multiply(
+            tf.div(tf.subtract(image_j, -1.8), tf.subtract(4.4, -1.8)), 2.0), 1)
 
     # Batch
     if do_shuffle is True:
-        images_i, images_j, gt_i, gt_j = tf.train.shuffle_batch([image_i, image_j, gt_i, gt_j], BATCH_SIZE, 500, 100)
+        images_i, images_j, gt_i, gt_j = tf.train.shuffle_batch(
+            [image_i, image_j, gt_i, gt_j], batch_size, 500, 100)
     else:
-        images_i, images_j, gt_i, gt_j = tf.train.batch([image_i, image_j, gt_i, gt_j], batch_size=BATCH_SIZE, num_threads=1, capacity=500)
+        images_i, images_j, gt_i, gt_j = tf.train.batch(
+            [image_i, image_j, gt_i, gt_j], batch_size=batch_size, num_threads=1, capacity=500)
 
     return images_i, images_j, gt_i, gt_j
