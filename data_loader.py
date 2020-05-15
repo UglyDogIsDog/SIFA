@@ -22,9 +22,10 @@ def _decode_samples(image_list, is_training_value=True):
     label_size = [256, 256, 1]
 
     if is_training_value:
-        data_queue = tf.train.string_input_producer(image_list)
+        data_queue = tf.train.string_input_producer(image_list, shuffle=False)
     else:
-        data_queue = tf.train.string_input_producer(image_list, num_epochs=1)
+        data_queue = tf.train.string_input_producer(
+            image_list, shuffle=False, num_epochs=1)
     reader = tf.TFRecordReader()
     fid, serialized_example = reader.read(data_queue)
     parser = tf.parse_single_example(
