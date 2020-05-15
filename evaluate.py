@@ -20,6 +20,7 @@ TEST_MODALITY = 'CT'
 KEEP_RATE = 0.5
 IS_TRAINING = False
 BATCH_SIZE = 128
+SAMPLES = 10
 
 data_size = [256, 256, 1]
 label_size = [256, 256, 1]
@@ -216,8 +217,6 @@ class SIFA:
 
                     print(inputs['images_j'].shape)
 
-                    SAMPLES = 10
-
                     self.samples = SAMPLES
 
                     pred_b = np.zeros(
@@ -232,7 +231,7 @@ class SIFA:
                     pred_b_var = np.var(pred_b, 0)
                     pred_b_final_var = np.max(pred_b_var, 3)
 
-                    if not pred_b_final_all:
+                    if pred_b_final_all is None:
                         pred_b_final_all = pred_b_final
                         pred_b_final_var_all = pred_b_final_var
                     else:
