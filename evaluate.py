@@ -202,6 +202,8 @@ class SIFA:
                 # in most cases coord.should_stop() will return True
                 # when there are no more samples to read
                 # if num_epochs=0 then it will run for ever
+                pred_b_final_all = None
+                pred_b_final_var_all = None
                 while not coord.should_stop():
 
                     images_i, images_j, gts_i, gts_j = sess.run(self.inputs)
@@ -226,15 +228,25 @@ class SIFA:
                             self.input_b: inputs['images_j']})
 
                     pred_b_avg = np.mean(pred_b, 0)
+                    pred_b_final = np.argmax(pred_b_avg, 3)
+                    pred_b_var = np.var(pred_b, 0)
+                    pred_b_final_var = np.max(pred_b_var, 3)
 
-                    print(pred_b_avg.shape)
-                    break
+                    if not pred_b_final_all:
+                        pred_b_final_all = pred_b_final
+                        pred_b_final_var_all = pred_b_final_var
+                    else:
+                        pred_b_final_all = np.concatenate(
+                            (pred_b_final_all, pred_b_final), axis=0)
+                        pred_b_final_var_all = np.concatenate(
+                            (pred_b_final_var_all, pred_b_final_var), axis=0)
 
             finally:
                 coord.request_stop()
                 coord.join(threads)
 
                 print(1)
+                print(pred_b_final_all.shape)
 
             '''
 
