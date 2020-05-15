@@ -332,9 +332,9 @@ class SIFA:
 
         # Load Dataset
         self.inputs = data_loader.load_data(
-            self._source_train_pth, self._target_train_pth, self._batch_size, True, True)
+            self._source_train_pth, self._target_train_pth, self._batch_size, True)
         self.inputs_val = data_loader.load_data(
-            self._source_val_pth, self._target_val_pth, self._batch_size, True, True)
+            self._source_val_pth, self._target_val_pth, self._batch_size, True)
 
         # Build the network
         self.model_setup()

@@ -140,7 +140,7 @@ class SIFA:
         """Test Function."""
 
         self.inputs = data_loader.load_data(
-            './data/datalist/training_mr.txt', './data/datalist/training_ct.txt', self.batch_size, False, False)
+            './data/datalist/training_mr.txt', './data/datalist/training_ct.txt', self.batch_size, False)
 
         self.model_setup()
         saver = tf.train.Saver()
@@ -159,7 +159,7 @@ class SIFA:
             assd_list = []
 
             coord = tf.train.Coordinator()
-            threads = tf.train.start_queue_runners(coord=coord)
+            threads = tf.train.start_queue_runners(sess=sess, coord=coord)
 
             '''
             for idx_file, fid in enumerate(test_list):
