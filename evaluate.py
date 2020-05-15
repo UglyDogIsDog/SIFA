@@ -229,7 +229,9 @@ class SIFA:
                     pred_b_avg = np.mean(pred_b, 0)
                     pred_b_final = np.argmax(pred_b_avg, 3)
                     pred_b_var = np.var(pred_b, 0)
-                    pred_b_final_var = pred_b_var[pred_b_final]
+                    I, J, K = np.ix_(
+                        range(pred_b_var.shape[0]), range(pred_b_var.shape[1]), range(pred_b_var.shape[2]))
+                    pred_b_final_var = pred_b_var[I, J, K, pred_b_final]
                     print(pred_b_final_var.shape)
 
                     if pred_b_final_all is None:
