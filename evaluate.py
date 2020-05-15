@@ -142,11 +142,15 @@ class SIFA:
         inputs = data_loader.load_data(
             './data/datalist/training_mr.txt', './data/datalist/training_ct.txt', True)
 
+        print(1)
+
         self.model_setup()
         saver = tf.train.Saver()
         init = tf.global_variables_initializer()
 
         test_list = self.read_lists(self.test_fid)
+
+        print(2)
 
         gpu_options = tf.GPUOptions(allow_growth=True)
         with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
@@ -193,6 +197,7 @@ class SIFA:
                         data_batch = np.subtract(np.multiply(
                             np.divide(np.subtract(data_batch, -1.8), np.subtract(4.4, -1.8)), 2.0), 1)
                             '''
+            print(3)
 
             images_i, images_j, gts_i, gts_j = sess.run(inputs)
             inputs = {
@@ -201,6 +206,8 @@ class SIFA:
                 'gts_i': gts_i,
                 'gts_j': gts_j,
             }
+
+            print(4)
 
             print(inputs['images_j'].shape)
 
