@@ -144,7 +144,8 @@ class SIFA:
 
         self.model_setup()
         saver = tf.train.Saver()
-        init = tf.global_variables_initializer()
+        init = (tf.global_variables_initializer(),
+                tf.local_variables_initializer())
 
         test_list = self.read_lists(self.test_fid)
 
