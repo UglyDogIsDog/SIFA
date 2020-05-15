@@ -53,8 +53,8 @@ def _load_samples(source_pth, target_pth, is_training_value=True):
         rows = fp.readlines()
     imageb_list = [row[:-1] for row in rows]
 
-    data_vola, label_vola = _decode_samples(imagea_list)
-    data_volb, label_volb = _decode_samples(imageb_list)
+    data_vola, label_vola = _decode_samples(imagea_list, is_training_value)
+    data_volb, label_volb = _decode_samples(imageb_list, is_training_value)
 
     return data_vola, data_volb, label_vola, label_volb
 
