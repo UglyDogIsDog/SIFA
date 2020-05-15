@@ -213,12 +213,20 @@ class SIFA:
                     }
 
                     print(inputs['images_j'].shape)
+                    compact_pred_b_val_1 = sess.run(self.predicter_b, feed_dict={
+                        self.input_b: inputs['images_j']})
+
+                    compact_pred_b_val_2 = sess.run(self.predicter_b, feed_dict={
+                        self.input_b: inputs['images_j']})
+
+                    print((compact_pred_b_val_1 -
+                           compact_pred_b_val_2)[0, 0, 0])
 
             finally:
                 coord.request_stop()
                 coord.join(threads)
 
-            print(1)
+                print(1)
 
             '''
 
