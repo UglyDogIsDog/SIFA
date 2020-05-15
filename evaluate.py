@@ -244,8 +244,9 @@ class SIFA:
                 coord.request_stop()
                 coord.join(threads)
 
-                print(1)
                 print(pred_b_final_all.shape)
+                np.save('pred.npy', pred_b_final_all)
+                np.save('pred_var.npy', pred_b_final_var_all)
 
             '''
 
