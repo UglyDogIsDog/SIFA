@@ -140,7 +140,7 @@ class SIFA:
         """Test Function."""
 
         self.inputs = data_loader.load_data(
-            './data/datalist/training_mr.txt', './data/datalist/training_ct.txt', self.batch_size, False)
+            './data/datalist/training_mr.txt', './data/datalist/training_ct.txt', self.batch_size, False, False)
 
         self.model_setup()
         saver = tf.train.Saver()
@@ -217,6 +217,8 @@ class SIFA:
             finally:
                 coord.request_stop()
                 coord.join(threads)
+
+            print(1)
 
             '''
 

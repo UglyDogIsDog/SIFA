@@ -2,7 +2,7 @@ import tensorflow as tf
 import json
 
 
-def _decode_samples(image_list):
+def _decode_samples(image_list, is_training_value=True):
     decomp_feature = {
         # image size, dimensions of 3 consecutive slices
         'dsize_dim0': tf.FixedLenFeature([], tf.int64),  # 256
@@ -21,7 +21,10 @@ def _decode_samples(image_list):
     volume_size = [256, 256, 3]
     label_size = [256, 256, 1]
 
-    data_queue = tf.train.string_input_producer(image_list)
+    if is_training_value:
+        data_queue = tf.train.string_input_producer(image_list)
+    else:
+        data_queue = tf.train.string_input_producer(image_list, num_epochs=1)
     reader = tf.TFRecordReader()
     fid, serialized_example = reader.read(data_queue)
     parser = tf.parse_single_example(
@@ -40,7 +43,7 @@ def _decode_samples(image_list):
     return tf.expand_dims(data_vol[:, :, 1], axis=2), batch_y
 
 
-def _load_samples(source_pth, target_pth):
+def _load_samples(source_pth, target_pth, is_training_value=True):
 
     with open(source_pth, 'r') as fp:
         rows = fp.readlines()
@@ -50,16 +53,16 @@ def _load_samples(source_pth, target_pth):
         rows = fp.readlines()
     imageb_list = [row[:-1] for row in rows]
 
-    data_vola, label_vola = _decode_samples(imagea_list)
-    data_volb, label_volb = _decode_samples(imageb_list)
+    data_vola, label_vola = _decode_samples(imagea_list, is_training_value)
+    data_volb, label_volb = _decode_samples(imageb_list, is_training_value)
 
     return data_vola, data_volb, label_vola, label_volb
 
 
-def load_data(source_pth, target_pth, batch_size, do_shuffle=True):
+def load_data(source_pth, target_pth, batch_size, do_shuffle=True, is_training_value=True):
 
     image_i, image_j, gt_i, gt_j = _load_samples(
-        source_pth, target_pth)
+        source_pth, target_pth, is_training_value)
 
     # For converting the value range to be [-1 1] using the equation 2*[(x-x_min)/(x_max-x_min)]-1.
     # The values {-1.8, 4.4, -2.8, 3.2} need to be changed according to the statistics of specific datasets
