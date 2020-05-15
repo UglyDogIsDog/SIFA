@@ -60,7 +60,7 @@ class SIFA:
             ], name="input_A")
         self.input_b = tf.placeholder(
             tf.float32, [
-                self.batch_size,
+                None,
                 model.IMG_WIDTH,
                 model.IMG_HEIGHT,
                 1
@@ -213,14 +213,22 @@ class SIFA:
                     }
 
                     print(inputs['images_j'].shape)
-                    compact_pred_b_val_1 = sess.run(self.predicter_b, feed_dict={
-                        self.input_b: inputs['images_j']})
 
-                    compact_pred_b_val_2 = sess.run(self.predicter_b, feed_dict={
-                        self.input_b: inputs['images_j']})
+                    SAMPLES = 10
 
-                    print((compact_pred_b_val_1 -
-                           compact_pred_b_val_2)[0, 0, 0])
+                    self.samples = SAMPLES
+
+                    pred_b = np.zeros(
+                        (self.samples, inputs['images_j'].shape[0:3], 5))
+
+                    for i in range(self.samples):
+                        pred_b[i] = sess.run(self.predicter_b, feed_dict={
+                            self.input_b: inputs['images_j']})
+
+                    pred_b_avg = np.mean(pred_b, 0)
+
+                    print(pred_b_avg.shape)
+                    break
 
             finally:
                 coord.request_stop()
