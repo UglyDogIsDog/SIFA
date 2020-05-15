@@ -20,7 +20,7 @@ TEST_MODALITY = 'CT'
 KEEP_RATE = 0.5
 IS_TRAINING = False
 BATCH_SIZE = 128
-SAMPLES = 10
+SAMPLES = 50
 
 data_size = [256, 256, 1]
 label_size = [256, 256, 1]
@@ -226,22 +226,31 @@ class SIFA:
                         pred_b[i] = sess.run(self.predicter_b, feed_dict={
                             self.input_b: inputs['images_j']})
 
-                    pred_b_avg = np.mean(pred_b, 0)
-                    pred_b_final = np.argmax(pred_b_avg, 3)
+                    # pred_b [S, B, 256, 256, 5]
+                    pred_b_avg = np.mean(pred_b, 0)  # [B, 256, 256, 5]
+                    pred_b_final = np.argmax(pred_b_avg, 3)  # [B, 256, 256]
+                    pred_b_final_extend = np.repeat(
+                        np.expand_dims(pred_b_final, axis=0), self.samples, axis=0)  # [S, B, 256, 256]
+                    pred_b_samples = np.argmax(pred_b, 4)  # [S, B, 256, 256]
+                    pred_b_agree = np.sum(pred_b_final_extend == pred_b_samples,
+                                          axis=0)  # [B, 256, 256]
+
+                    '''
                     pred_b_var = np.var(pred_b, 0)
                     I, J, K = np.ix_(
                         range(pred_b_var.shape[0]), range(pred_b_var.shape[1]), range(pred_b_var.shape[2]))
                     pred_b_final_var = pred_b_var[I, J, K, pred_b_final]
                     print(pred_b_final_var.shape)
+                    '''
 
                     if pred_b_final_all is None:
                         pred_b_final_all = pred_b_final
-                        pred_b_final_var_all = pred_b_final_var
+                        pred_b_agree_all = pred_b_agree
                     else:
                         pred_b_final_all = np.concatenate(
                             (pred_b_final_all, pred_b_final), axis=0)
-                        pred_b_final_var_all = np.concatenate(
-                            (pred_b_final_var_all, pred_b_final_var), axis=0)
+                        pred_b_agree_all = np.concatenate(
+                            (pred_b_agree_all, pred_b_agree), axis=0)
 
             finally:
                 coord.request_stop()
@@ -249,7 +258,7 @@ class SIFA:
 
                 print(pred_b_final_all.shape)
                 np.save('pred.npy', pred_b_final_all)
-                np.save('pred_var.npy', pred_b_final_var_all)
+                np.save('pred_var.npy', pred_b_agree_all)
 
             '''
 
