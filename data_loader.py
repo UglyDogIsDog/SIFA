@@ -86,6 +86,6 @@ def load_data(source_pth, target_pth, batch_size, do_shuffle=True, is_training_v
             [image_i, image_j, gt_i, gt_j], batch_size, 500, 100)
     else:
         images_i, images_j, gt_i, gt_j = tf.train.batch(
-            [image_i, image_j, gt_i, gt_j], batch_size=batch_size, num_threads=1, capacity=500)
+            [image_i, image_j, gt_i, gt_j], batch_size=batch_size, num_threads=1, capacity=500, allow_smaller_final_batch=True)
 
     return images_i, images_j, gt_i, gt_j
