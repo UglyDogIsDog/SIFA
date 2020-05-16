@@ -13,7 +13,7 @@ import data_loader
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-CHECKPOINT_PATH = './output/20200514-102632/sifa-5999'  # model path
+CHECKPOINT_PATH = './output/20200515-151600/sifa-9500'  # model path
 # path of the .txt file storing the test filenames
 TESTFILE_FID = './data/datalist/testing_ct.txt'
 TEST_MODALITY = 'CT'
@@ -104,6 +104,8 @@ class SIFA:
 
         outputs = model.get_outputs(
             inputs, skip=self._skip, is_training=self.is_training, keep_rate=self.keep_rate)
+
+        self.latent_b_ll = outputs['latent_b_ll']
 
         self.pred_mask_b = outputs['pred_mask_b']
 
@@ -204,7 +206,8 @@ class SIFA:
                 # when there are no more samples to read
                 # if num_epochs=0 then it will run for ever
                 pred_b_final_all = None
-                pred_b_final_var_all = None
+                pred_b_agree_all = None
+                latent_all = None
                 while not coord.should_stop():
 
                     images_i, images_j, gts_i, gts_j = sess.run(self.inputs)
@@ -216,6 +219,9 @@ class SIFA:
                     }
 
                     print(inputs['images_j'].shape)
+                    latent = sess.run(self.latent_b_ll, feed_dict={
+                        self.input_b: inputs['images_j']})
+                    print(latent.shape)
 
                     self.samples = SAMPLES
 
@@ -232,8 +238,8 @@ class SIFA:
                     pred_b_final_extend = np.repeat(
                         np.expand_dims(pred_b_final, axis=0), self.samples, axis=0)  # [S, B, 256, 256]
                     pred_b_samples = np.argmax(pred_b, 4)  # [S, B, 256, 256]
-                    pred_b_agree = np.sum(pred_b_final_extend == pred_b_samples,
-                                          axis=0)  # [B, 256, 256]
+                    pred_b_agree = self.samples - np.sum(pred_b_final_extend == pred_b_samples,
+                                                         axis=0)  # [B, 256, 256]
 
                     '''
                     pred_b_var = np.var(pred_b, 0)
@@ -246,11 +252,14 @@ class SIFA:
                     if pred_b_final_all is None:
                         pred_b_final_all = pred_b_final
                         pred_b_agree_all = pred_b_agree
+                        latent_all = latent
                     else:
                         pred_b_final_all = np.concatenate(
                             (pred_b_final_all, pred_b_final), axis=0)
                         pred_b_agree_all = np.concatenate(
                             (pred_b_agree_all, pred_b_agree), axis=0)
+                        latent_all = np.concatenate(
+                            (latent_all, latent), axis=0)
 
             finally:
                 coord.request_stop()
@@ -259,6 +268,7 @@ class SIFA:
                 print(pred_b_final_all.shape)
                 np.save('pred.npy', pred_b_final_all)
                 np.save('pred_var.npy', pred_b_agree_all)
+                np.save('latent.npy', latent_all)
 
             '''
 

@@ -369,7 +369,7 @@ class SIFA:
             curr_lr_seg = 0.001
             cnt = -1
 
-            for i in range(self._max_step):
+            for i in range(self._max_step + 1):
                 starttime = time.time()
 
                 cnt += 1
