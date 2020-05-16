@@ -105,6 +105,7 @@ class SIFA:
         outputs = model.get_outputs(
             inputs, skip=self._skip, is_training=self.is_training, keep_rate=self.keep_rate)
 
+        self.latent_b = outputs['latent_b']
         self.latent_b_ll = outputs['latent_b_ll']
 
         self.pred_mask_b = outputs['pred_mask_b']
@@ -222,6 +223,10 @@ class SIFA:
                     latent = sess.run(self.latent_b_ll, feed_dict={
                         self.input_b: inputs['images_j']})
                     print(latent.shape)
+
+                    latent2 = sess.run(self.latent_b, feed_dict={
+                        self.input_b: inputs['images_j']})
+                    print(latent2.shape)
 
                     self.samples = SAMPLES
 
