@@ -150,7 +150,7 @@ class SIFA:
         init = (tf.global_variables_initializer(),
                 tf.local_variables_initializer())
 
-        test_list = self.read_lists(self.test_fid)
+        #test_list = self.read_lists(self.test_fid)
 
         gpu_options = tf.GPUOptions(allow_growth=True)
         with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
