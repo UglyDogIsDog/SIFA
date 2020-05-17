@@ -205,6 +205,8 @@ class SIFA:
                 # in most cases coord.should_stop() will return True
                 # when there are no more samples to read
                 # if num_epochs=0 then it will run for ever
+                input_b_all = None
+                gt_b_all = None
                 pred_b_final_all = None
                 pred_b_agree_all = None
                 latent_all = None
@@ -218,7 +220,10 @@ class SIFA:
                         'gts_j': gts_j,
                     }
 
-                    print(inputs['images_j'].shape)
+                    input_b = inputs['images_j']
+                    gt_b = inputs['gts_j']
+                    print(input_b.shape)
+                    print(gt_b.shape)
                     latent = sess.run(self.latent_b_ll, feed_dict={
                         self.input_b: inputs['images_j']})  # [B, 32, 32, 512]
                     latent = np.max(latent, (1, 2))
@@ -251,10 +256,16 @@ class SIFA:
                     '''
 
                     if pred_b_final_all is None:
+                        input_b_all = input_b
+                        gt_b_all = gt_b
                         pred_b_final_all = pred_b_final
                         pred_b_agree_all = pred_b_agree
                         latent_all = latent
                     else:
+                        input_b_all = np.concatenate(
+                            (input_b_all, input_b), axis=0)
+                        gt_b_all = np.concatenate(
+                            (gt_b_all, gt_b), axis=0)
                         pred_b_final_all = np.concatenate(
                             (pred_b_final_all, pred_b_final), axis=0)
                         pred_b_agree_all = np.concatenate(
@@ -267,6 +278,8 @@ class SIFA:
                 coord.join(threads)
 
                 print(pred_b_final_all.shape)
+                np.save('input.npy', input_b_all)
+                np.save('gt.npy', gt_b_all)
                 np.save('pred.npy', pred_b_final_all)
                 np.save('pred_var.npy', pred_b_agree_all)
                 np.save('latent.npy', latent_all)
