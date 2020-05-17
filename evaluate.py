@@ -220,8 +220,8 @@ class SIFA:
                         'gts_j': gts_j,
                     }
 
-                    input_b = inputs['images_j']
-                    gt_b = inputs['gts_j']
+                    input_b = np.squeeze(inputs['images_j'], axis=3)
+                    gt_b = np.argmax(inputs['gts_j'], axis=3)
                     print(input_b.shape)
                     print(gt_b.shape)
                     latent = sess.run(self.latent_b_ll, feed_dict={
