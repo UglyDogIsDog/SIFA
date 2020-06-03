@@ -40,7 +40,7 @@ class SIFA:
     """The SIFA module."""
 
     def __init__(self, config):
-
+        print(str(sys.argv))
         self.keep_rate = KEEP_RATE
         self.is_training = IS_TRAINING
         self.checkpoint_pth = CHECKPOINT_PATH + sys.argv[1]
@@ -355,4 +355,5 @@ def main(config_filename):
 
 
 if __name__ == '__main__':
+    print(str(sys.argv))
     main(config_filename='./config_param.json')
