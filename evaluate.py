@@ -288,15 +288,16 @@ class SIFA:
                 np.save('latent.npy', latent_all)
                 '''
 
+                cat_uncertainty = []
                 all_uncertainty = np.mean(pred_b_agree_all)
                 for i in range(1, 5):
-                    cat_uncertainty = np.mean(
-                        pred_b_agree_all[pred_b_final_all == i])
+                    cat_uncertainty += [np.mean(
+                        pred_b_agree_all[pred_b_final_all == i])]
 
                 f = open("line.txt", "a+")
                 f.write(sys.argv[1] + "\n")
                 f.write(str(all_uncertainty) + "\n")
-                for i in range(1, 5):
+                for i in range(0, 4):
                     f.wirte(str(cat_uncertainty[i]) + "\n")
                 f.close()
 
