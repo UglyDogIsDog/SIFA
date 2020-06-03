@@ -15,6 +15,6 @@
   "is_training_value": 1,
   "batch_size": 8,
   "lr_gan_decay": 0,
-  "to_restore": 0,
-  "checkpoint_dir": " "
+  "to_restore": 1,
+  "checkpoint_dir": "./output/20200515-151600/"
 }

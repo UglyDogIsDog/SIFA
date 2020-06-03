@@ -16,7 +16,7 @@ from stats_func import *
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-save_interval = 500
+save_interval = 30
 evaluation_interval = 10
 random_seed = 1234
 
@@ -345,7 +345,7 @@ class SIFA:
         # Initializing the global variables
         init = (tf.global_variables_initializer(),
                 tf.local_variables_initializer())
-        saver = tf.train.Saver(max_to_keep=5)
+        saver = tf.train.Saver(max_to_keep=50)
 
         gpu_options = tf.GPUOptions(allow_growth=True)
         with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
