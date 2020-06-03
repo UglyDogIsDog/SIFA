@@ -11,9 +11,11 @@ from stats_func import *
 
 import data_loader
 
+import sys
+
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-CHECKPOINT_PATH = './output/20200515-151600/sifa-8500'  # model path
+CHECKPOINT_PATH = './output/20200603-041954/sifa-'  # model path
 # path of the .txt file storing the test filenames
 TESTFILE_FID = './data/datalist/testing_ct.txt'
 TEST_MODALITY = 'CT'
@@ -41,7 +43,7 @@ class SIFA:
 
         self.keep_rate = KEEP_RATE
         self.is_training = IS_TRAINING
-        self.checkpoint_pth = CHECKPOINT_PATH
+        self.checkpoint_pth = CHECKPOINT_PATH + sys.argv[1]
         self.batch_size = BATCH_SIZE
 
         self._pool_size = int(config['pool_size'])
@@ -283,6 +285,18 @@ class SIFA:
                 np.save('pred.npy', pred_b_final_all)
                 np.save('pred_var.npy', pred_b_agree_all)
                 np.save('latent.npy', latent_all)
+
+                all_uncertainty = np.mean(pred_b_agree_all)
+                for i in range(1, 5):
+                    cat_uncertainty = np.mean(
+                        pred_b_agree_all[pred_b_final_all == i])
+
+                f = open("line.txt", "a+")
+                f.write(sys.argv[1] + "\n")
+                f.write(str(all_uncertainty) + "\n")
+                for i in range(1, 5):
+                    f.wirte(str(cat_uncertainty[i]) + "\n")
+                f.close()
 
             '''
 
