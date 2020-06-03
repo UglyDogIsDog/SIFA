@@ -298,7 +298,7 @@ class SIFA:
                 f.write(sys.argv[1] + "\n")
                 f.write(str(all_uncertainty) + "\n")
                 for i in range(0, 4):
-                    f.wirte(str(cat_uncertainty[i]) + "\n")
+                    f.write(str(cat_uncertainty[i]) + "\n")
                 f.close()
 
             '''
