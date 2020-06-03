@@ -13,7 +13,7 @@ import data_loader
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-CHECKPOINT_PATH = './output/20200515-151600/sifa-9500'  # model path
+CHECKPOINT_PATH = './output/20200515-151600/sifa-9000'  # model path
 # path of the .txt file storing the test filenames
 TESTFILE_FID = './data/datalist/testing_ct.txt'
 TEST_MODALITY = 'CT'
