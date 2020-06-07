@@ -210,7 +210,7 @@ class SIFA:
                 input_b_all = None
                 gt_b_all = None
                 pred_b_final_all = None
-                pred_b_agree_all = None
+                pred_b_disagree_all = None
                 latent_all = None
                 while not coord.should_stop():
 
@@ -246,8 +246,8 @@ class SIFA:
                     pred_b_final_extend = np.repeat(
                         np.expand_dims(pred_b_final, axis=0), self.samples, axis=0)  # [S, B, 256, 256]
                     pred_b_samples = np.argmax(pred_b, 4)  # [S, B, 256, 256]
-                    pred_b_agree = self.samples - np.sum(pred_b_final_extend == pred_b_samples,
-                                                         axis=0)  # [B, 256, 256]
+                    pred_b_disagree = (self.samples - np.sum(pred_b_final_extend == pred_b_samples,
+                                                             axis=0)) / self.samples  # [B, 256, 256]
 
                     '''
                     pred_b_var = np.var(pred_b, 0)
@@ -261,7 +261,7 @@ class SIFA:
                         #input_b_all = input_b
                         #gt_b_all = gt_b
                         pred_b_final_all = pred_b_final
-                        pred_b_agree_all = pred_b_agree
+                        pred_b_disagree_all = pred_b_disagree
                         #latent_all = latent
                     else:
                         # input_b_all = np.concatenate(
@@ -270,8 +270,8 @@ class SIFA:
                         #    (gt_b_all, gt_b), axis=0)
                         pred_b_final_all = np.concatenate(
                             (pred_b_final_all, pred_b_final), axis=0)
-                        pred_b_agree_all = np.concatenate(
-                            (pred_b_agree_all, pred_b_agree), axis=0)
+                        pred_b_disagree_all = np.concatenate(
+                            (pred_b_disagree_all, pred_b_disagree), axis=0)
                         # latent_all = np.concatenate(
                         #    (latent_all, latent), axis=0)
 
@@ -284,15 +284,15 @@ class SIFA:
                 np.save('input.npy', input_b_all)
                 np.save('gt.npy', gt_b_all)
                 np.save('pred.npy', pred_b_final_all)
-                np.save('pred_var.npy', pred_b_agree_all)
+                np.save('pred_var.npy', pred_b_disagree_all)
                 np.save('latent.npy', latent_all)
                 '''
 
                 cat_uncertainty = []
-                all_uncertainty = np.mean(pred_b_agree_all)
+                all_uncertainty = np.mean(pred_b_disagree_all)
                 for i in range(1, 5):
                     cat_uncertainty += [np.mean(
-                        pred_b_agree_all[pred_b_final_all == i])]
+                        pred_b_disagree_all[pred_b_final_all == i])]
 
                 f = open("line.txt", "a+")
                 f.write(sys.argv[1] + "\n")

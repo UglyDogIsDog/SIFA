@@ -10,11 +10,11 @@
   "skip": 1,
   "num_cls": 5,
   "base_lr": 0.0002,
-  "max_step": 10000,
+  "max_step": 40001,
   "keep_rate_value": 0.5,
   "is_training_value": 1,
   "batch_size": 8,
   "lr_gan_decay": 0,
-  "to_restore": 1,
-  "checkpoint_dir": "./output/20200515-151600/"
+  "to_restore": 0,
+  "checkpoint_dir": " "
 }
