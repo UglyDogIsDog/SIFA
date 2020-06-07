@@ -3,7 +3,7 @@ import numpy as np
 
 
 def make_datalist(data_fd, data_list):
-    filename_all = os.listdir(data_fd)[:2048]
+    filename_all = os.listdir(data_fd)  # [:2048]
     filename_all = [data_fd+'/'+filename +
                     '\n' for filename in filename_all if filename.endswith('.tfrecords')]
 
