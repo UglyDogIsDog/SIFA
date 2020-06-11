@@ -258,35 +258,34 @@ class SIFA:
                     '''
 
                     if pred_b_final_all is None:
-                        #input_b_all = input_b
-                        #gt_b_all = gt_b
+                        input_b_all = input_b
+                        gt_b_all = gt_b
                         pred_b_final_all = pred_b_final
                         pred_b_disagree_all = pred_b_disagree
-                        #latent_all = latent
+                        latent_all = latent
                     else:
-                        # input_b_all = np.concatenate(
-                        #    (input_b_all, input_b), axis=0)
-                        # gt_b_all = np.concatenate(
-                        #    (gt_b_all, gt_b), axis=0)
+                        input_b_all = np.concatenate(
+                            (input_b_all, input_b), axis=0)
+                        gt_b_all = np.concatenate(
+                            (gt_b_all, gt_b), axis=0)
                         pred_b_final_all = np.concatenate(
                             (pred_b_final_all, pred_b_final), axis=0)
                         pred_b_disagree_all = np.concatenate(
                             (pred_b_disagree_all, pred_b_disagree), axis=0)
-                        # latent_all = np.concatenate(
-                        #    (latent_all, latent), axis=0)
+                        latent_all = np.concatenate(
+                            (latent_all, latent), axis=0)
 
             finally:
                 coord.request_stop()
                 coord.join(threads)
 
                 print(pred_b_final_all.shape)
-                '''
+
                 np.save('input.npy', input_b_all)
                 np.save('gt.npy', gt_b_all)
                 np.save('pred.npy', pred_b_final_all)
                 np.save('pred_var.npy', pred_b_disagree_all)
                 np.save('latent.npy', latent_all)
-                '''
 
                 cat_uncertainty = []
                 all_uncertainty = np.mean(pred_b_disagree_all)
