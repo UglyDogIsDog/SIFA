@@ -15,7 +15,7 @@ import sys
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-CHECKPOINT_PATH = './output/20200603-041954/sifa-'  # model path
+CHECKPOINT_PATH = './output/20200607-132844/sifa-39900'  # model path
 # path of the .txt file storing the test filenames
 TESTFILE_FID = './data/datalist/testing_ct.txt'
 TEST_MODALITY = 'CT'
@@ -40,10 +40,10 @@ class SIFA:
     """The SIFA module."""
 
     def __init__(self, config):
-        print(str(sys.argv))
+        # print(str(sys.argv))
         self.keep_rate = KEEP_RATE
         self.is_training = IS_TRAINING
-        self.checkpoint_pth = CHECKPOINT_PATH + sys.argv[1]
+        self.checkpoint_pth = CHECKPOINT_PATH
         self.batch_size = BATCH_SIZE
 
         self._pool_size = int(config['pool_size'])
@@ -287,6 +287,8 @@ class SIFA:
                 np.save('pred_var.npy', pred_b_disagree_all)
                 np.save('latent.npy', latent_all)
 
+                '''
+
                 cat_uncertainty = []
                 all_uncertainty = np.mean(pred_b_disagree_all)
                 for i in range(1, 5):
@@ -299,6 +301,7 @@ class SIFA:
                 for i in range(0, 4):
                     f.write(str(cat_uncertainty[i]) + "\n")
                 f.close()
+                '''
 
             '''
 
@@ -357,5 +360,5 @@ def main(config_filename):
 
 
 if __name__ == '__main__':
-    print(str(sys.argv))
+    # print(str(sys.argv))
     main(config_filename='./config_param.json')
