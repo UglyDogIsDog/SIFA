@@ -14,7 +14,7 @@ CHECKPOINT_PATH = './output/20200607-132844/sifa-39900'  # model path
 # path of the .txt file storing the test filenames
 KEEP_RATE = 0.5
 IS_TRAINING = False
-BATCH_SIZE = 128
+BATCH_SIZE = 64
 SAMPLES = 50
 
 
