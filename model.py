@@ -108,7 +108,7 @@ def get_outputs(inputs, skip=False, is_training=True, keep_rate=0.75):
         'prob_fake_pool_a_aux_is_real': prob_fake_pool_a_aux_is_real,
         'prob_cycle_a_aux_is_real': prob_cycle_a_aux_is_real,
         'latent_b_ll': latent_b_ll,
-        'latent_b': latent_b,
+        'latent_fake_b_ll': latent_fake_b_ll,
     }
 
 

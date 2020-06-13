@@ -2,58 +2,35 @@
 import json
 import numpy as np
 import os
+import sys
 import medpy.metric.binary as mmb
-
 import tensorflow as tf
-
 import model
 from stats_func import *
-
 import data_loader
 
-import sys
-
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-
 CHECKPOINT_PATH = './output/20200607-132844/sifa-39900'  # model path
 # path of the .txt file storing the test filenames
-TESTFILE_FID = './data/datalist/testing_ct.txt'
-TEST_MODALITY = 'CT'
 KEEP_RATE = 0.5
 IS_TRAINING = False
 BATCH_SIZE = 128
 SAMPLES = 50
-
-data_size = [256, 256, 1]
-label_size = [256, 256, 1]
-
-contour_map = {
-    "bg": 0,
-    "la_myo": 1,
-    "la_blood": 2,
-    "lv_blood": 3,
-    "aa": 4,
-}
 
 
 class SIFA:
     """The SIFA module."""
 
     def __init__(self, config):
-        # print(str(sys.argv))
         self.keep_rate = KEEP_RATE
         self.is_training = IS_TRAINING
         self.checkpoint_pth = CHECKPOINT_PATH
         self.batch_size = BATCH_SIZE
-
-        self._pool_size = int(config['pool_size'])
         self._skip = bool(config['skip'])
         self._num_cls = int(config['num_cls'])
-
-        self.test_fid = TESTFILE_FID
+        self.samples = SAMPLES
 
     def model_setup(self):
-
         self.input_a = tf.placeholder(
             tf.float32, [
                 self.batch_size,
@@ -108,38 +85,12 @@ class SIFA:
             inputs, skip=self._skip, is_training=self.is_training, keep_rate=self.keep_rate)
 
         self.latent_b_ll = outputs['latent_b_ll']
-
         self.pred_mask_b = outputs['pred_mask_b']
-
         self.predicter_b = tf.nn.softmax(self.pred_mask_b)
-        self.compact_pred_b = tf.argmax(self.predicter_b, 3)
-        self.compact_y_b = tf.argmax(self.gt_b, 3)
 
-    def read_lists(self, fid):
-        """read test file list """
-
-        with open(fid, 'r') as fd:
-            _list = fd.readlines()
-
-        my_list = []
-        for _item in _list:
-            my_list.append(_item.split('\n')[0])
-        return my_list
-
-    def label_decomp(self, label_batch):
-        """decompose label for one-hot encoding """
-
-        _batch_shape = list(label_batch.shape)
-        _vol = np.zeros(_batch_shape)
-        _vol[label_batch == 0] = 1
-        _vol = _vol[..., np.newaxis]
-        for i in range(self._num_cls):
-            if i == 0:
-                continue
-            _n_slice = np.zeros(label_batch.shape)
-            _n_slice[label_batch == i] = 1
-            _vol = np.concatenate((_vol, _n_slice[..., np.newaxis]), axis=3)
-        return np.float32(_vol)
+        self.latent_fake_b_ll = outputs['latent_fake_b_ll']
+        self.pred_mask_fake_b = outputs['pred_mask_fake_b']
+        self.predicter_fake_b = tf.nn.softmax(self.pred_mask_fake_b)
 
     def test(self):
         """Test Function."""
@@ -152,122 +103,79 @@ class SIFA:
         init = (tf.global_variables_initializer(),
                 tf.local_variables_initializer())
 
-        #test_list = self.read_lists(self.test_fid)
-
         gpu_options = tf.GPUOptions(allow_growth=True)
         with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
             sess.run(init)
 
             saver.restore(sess, self.checkpoint_pth)
 
-            dice_list = []
-            assd_list = []
-
             coord = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(sess=sess, coord=coord)
-
-            '''
-            for idx_file, fid in enumerate(test_list):
-                _npz_dict = np.load(fid)
-                data = _npz_dict['arr_0']
-                label = _npz_dict['arr_1']
-
-                # This is to make the orientation of test data match with the training data
-                # Set to False if the orientation of test data has already been aligned with the training data
-                if True:
-                    data = np.flip(data, axis=0)
-                    data = np.flip(data, axis=1)
-                    label = np.flip(label, axis=0)
-                    label = np.flip(label, axis=1)
-
-                tmp_pred = np.zeros(label.shape)
-
-                frame_list = [kk for kk in range(data.shape[2])]
-                for ii in range(int(np.floor(data.shape[2] // self.batch_size))):
-                    data_batch = np.zeros(
-                        [self.batch_size, data_size[0], data_size[1], data_size[2]])
-                    label_batch = np.zeros(
-                        [self.batch_size, label_size[0], label_size[1]])
-                    for idx, jj in enumerate(frame_list[ii * self.batch_size: (ii + 1) * self.batch_size]):
-                        data_batch[idx, ...] = np.expand_dims(
-                            data[..., jj].copy(), 3)
-                        label_batch[idx, ...] = label[..., jj].copy()
-                    label_batch = self.label_decomp(label_batch)
-                    if TEST_MODALITY == 'CT':
-                        # {-2.8, 3.2} need to be changed according to the data statistics
-                        data_batch = np.subtract(np.multiply(
-                            np.divide(np.subtract(data_batch, -2.8), np.subtract(3.2, -2.8)), 2.0), 1)
-                    elif TEST_MODALITY == 'MR':
-                        # {-1.8, 4.4} need to be changed according to the data statistics
-                        data_batch = np.subtract(np.multiply(
-                            np.divide(np.subtract(data_batch, -1.8), np.subtract(4.4, -1.8)), 2.0), 1)
-                            '''
 
             try:
                 # in most cases coord.should_stop() will return True
                 # when there are no more samples to read
                 # if num_epochs=0 then it will run for ever
-                input_b_all = None
-                gt_b_all = None
+                img_all = None
+                gt_all = None
                 pred_b_final_all = None
                 pred_b_disagree_all = None
                 latent_all = None
                 while not coord.should_stop():
 
                     images_i, images_j, gts_i, gts_j = sess.run(self.inputs)
-                    inputs = {
-                        'images_i': images_i,
-                        'images_j': images_j,
-                        'gts_i': gts_i,
-                        'gts_j': gts_j,
-                    }
+                    if sys.argv[1] == "mr":
+                        inputs = {
+                            "in": images_i,
+                            "gt": gts_i,
+                        }
 
-                    input_b = np.squeeze(inputs['images_j'], axis=3)
-                    gt_b = np.argmax(inputs['gts_j'], axis=3)
-                    print(input_b.shape)
-                    print(gt_b.shape)
-                    latent = sess.run(self.latent_b_ll, feed_dict={
-                        self.input_b: inputs['images_j']})  # [B, 32, 32, 512]
+                        latent = sess.run(self.latent_fake_b_ll, feed_dict={
+                            self.input_a: inputs['in']})  # [B, 32, 32, 512]
+                        pred = np.zeros(
+                            (self.samples, inputs['in'].shape[0], model.IMG_WIDTH, model.IMG_HEIGHT, self._num_cls))
+                        for i in range(self.samples):
+                            pred[i] = sess.run(self.predicter_fake_b, feed_dict={
+                                self.input_a: inputs['in']})
+
+                    else:
+                        inputs = {
+                            "in": images_j,
+                            "gt": gts_j,
+                        }
+
+                        latent = sess.run(self.latent_b_ll, feed_dict={
+                            self.input_b: inputs['in']})  # [B, 32, 32, 512]
+                        pred = np.zeros(
+                            (self.samples, inputs['in'].shape[0], model.IMG_WIDTH, model.IMG_HEIGHT, self._num_cls))
+                        for i in range(self.samples):
+                            pred[i] = sess.run(self.predicter_b, feed_dict={
+                                self.input_b: inputs['in']})
+
+                    img = np.squeeze(inputs['in'], axis=3)
+                    gt = np.argmax(inputs['gt'], axis=3)
                     latent = np.max(latent, (1, 2))
-                    print(latent.shape)
 
-                    self.samples = SAMPLES
-
-                    pred_b = np.zeros(
-                        (self.samples, inputs['images_j'].shape[0], model.IMG_WIDTH, model.IMG_HEIGHT, self._num_cls))
-
-                    for i in range(self.samples):
-                        pred_b[i] = sess.run(self.predicter_b, feed_dict={
-                            self.input_b: inputs['images_j']})
-
-                    # pred_b [S, B, 256, 256, 5]
-                    pred_b_avg = np.mean(pred_b, 0)  # [B, 256, 256, 5]
+                    # pred [S, B, 256, 256, 5]
+                    pred_b_avg = np.mean(pred, 0)  # [B, 256, 256, 5]
                     pred_b_final = np.argmax(pred_b_avg, 3)  # [B, 256, 256]
                     pred_b_final_extend = np.repeat(
                         np.expand_dims(pred_b_final, axis=0), self.samples, axis=0)  # [S, B, 256, 256]
-                    pred_b_samples = np.argmax(pred_b, 4)  # [S, B, 256, 256]
+                    pred_b_samples = np.argmax(pred, 4)  # [S, B, 256, 256]
                     pred_b_disagree = (self.samples - np.sum(pred_b_final_extend == pred_b_samples,
                                                              axis=0)) / self.samples  # [B, 256, 256]
 
-                    '''
-                    pred_b_var = np.var(pred_b, 0)
-                    I, J, K = np.ix_(
-                        range(pred_b_var.shape[0]), range(pred_b_var.shape[1]), range(pred_b_var.shape[2]))
-                    pred_b_final_var = pred_b_var[I, J, K, pred_b_final]
-                    print(pred_b_final_var.shape)
-                    '''
-
                     if pred_b_final_all is None:
-                        input_b_all = input_b
-                        gt_b_all = gt_b
+                        img_all = img
+                        gt_all = gt
                         pred_b_final_all = pred_b_final
                         pred_b_disagree_all = pred_b_disagree
                         latent_all = latent
                     else:
-                        input_b_all = np.concatenate(
-                            (input_b_all, input_b), axis=0)
-                        gt_b_all = np.concatenate(
-                            (gt_b_all, gt_b), axis=0)
+                        img_all = np.concatenate(
+                            (img_all, img), axis=0)
+                        gt_all = np.concatenate(
+                            (gt_all, gt), axis=0)
                         pred_b_final_all = np.concatenate(
                             (pred_b_final_all, pred_b_final), axis=0)
                         pred_b_disagree_all = np.concatenate(
@@ -281,84 +189,16 @@ class SIFA:
 
                 print(pred_b_final_all.shape)
 
-                np.save('input.npy', input_b_all)
-                np.save('gt.npy', gt_b_all)
+                np.save('input.npy', img_all)
+                np.save('gt.npy', gt_all)
                 np.save('pred.npy', pred_b_final_all)
                 np.save('pred_var.npy', pred_b_disagree_all)
                 np.save('latent.npy', latent_all)
 
-                '''
 
-                cat_uncertainty = []
-                all_uncertainty = np.mean(pred_b_disagree_all)
-                for i in range(1, 5):
-                    cat_uncertainty += [np.mean(
-                        pred_b_disagree_all[pred_b_final_all == i])]
-
-                f = open("line.txt", "a+")
-                f.write(sys.argv[1] + "\n")
-                f.write(str(all_uncertainty) + "\n")
-                for i in range(0, 4):
-                    f.write(str(cat_uncertainty[i]) + "\n")
-                f.close()
-                '''
-
-            '''
-
-                    # compact_pred_b_val = sess.run(self.predicter_b, feed_dict={self.input_b: data_batch})
-                    compact_pred_b_val = sess.run(self.compact_pred_b, feed_dict={
-                                                  self.input_b: data_batch, self.gt_b: label_batch})
-
-                    for idx, jj in enumerate(frame_list[ii * self.batch_size: (ii + 1) * self.batch_size]):
-                        tmp_pred[..., jj] = compact_pred_b_val[idx, ...].copy()
-
-                for c in range(1, self._num_cls):
-                    pred_test_data_tr = tmp_pred.copy()
-                    pred_test_data_tr[pred_test_data_tr != c] = 0
-
-                    pred_gt_data_tr = label.copy()
-                    pred_gt_data_tr[pred_gt_data_tr != c] = 0
-
-                    dice_list.append(
-                        mmb.dc(pred_test_data_tr, pred_gt_data_tr))
-                    assd_list.append(
-                        mmb.assd(pred_test_data_tr, pred_gt_data_tr))
-
-            dice_arr = 100 * np.reshape(dice_list, [4, -1]).transpose()
-
-            dice_mean = np.mean(dice_arr, axis=1)
-            dice_std = np.std(dice_arr, axis=1)
-
-            print 'Dice:'
-            print 'AA :%.1f(%.1f)' % (dice_mean[3], dice_std[3])
-            print 'LAC:%.1f(%.1f)' % (dice_mean[1], dice_std[1])
-            print 'LVC:%.1f(%.1f)' % (dice_mean[2], dice_std[2])
-            print 'Myo:%.1f(%.1f)' % (dice_mean[0], dice_std[0])
-            print 'Mean:%.1f' % np.mean(dice_mean)
-
-            assd_arr = np.reshape(assd_list, [4, -1]).transpose()
-
-            assd_mean = np.mean(assd_arr, axis=1)
-            assd_std = np.std(assd_arr, axis=1)
-
-            print 'ASSD:'
-            print 'AA :%.1f(%.1f)' % (assd_mean[3], assd_std[3])
-            print 'LAC:%.1f(%.1f)' % (assd_mean[1], assd_std[1])
-            print 'LVC:%.1f(%.1f)' % (assd_mean[2], assd_std[2])
-            print 'Myo:%.1f(%.1f)' % (assd_mean[0], assd_std[0])
-            print 'Mean:%.1f' % np.mean(assd_mean)
-            '''
-
-
-def main(config_filename):
-
-    with open(config_filename) as config_file:
+if __name__ == '__main__':
+    with open('./config_param.json') as config_file:
         config = json.load(config_file)
 
     sifa_model = SIFA(config)
     sifa_model.test()
-
-
-if __name__ == '__main__':
-    # print(str(sys.argv))
-    main(config_filename='./config_param.json')
