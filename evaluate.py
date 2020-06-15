@@ -165,7 +165,7 @@ class SIFA:
                         np.expand_dims(pred_b_final, axis=0), self.samples, axis=0)  # [S, B, 256, 256]
                     pred_b_samples = np.argmax(pred, 4)  # [S, B, 256, 256]
                     pred_b_disagree = (self.samples - np.sum(pred_b_final_extend == pred_b_samples,
-                                                             axis=0)) / self.samples  # [B, 256, 256]
+                                                             axis=0)) / (self.samples * 1.0)  # [B, 256, 256]
 
                     if pred_b_final_all is None:
                         img_all = img
