@@ -132,13 +132,11 @@ class SIFA:
 
                         latent = sess.run(self.latent_fake_b_ll, feed_dict={
                             self.input_a: inputs['in']})  # [B, 32, 32, 512]
-                        print(latent.shape)
                         pred = np.zeros(
                             (self.samples, inputs['in'].shape[0], model.IMG_WIDTH, model.IMG_HEIGHT, self._num_cls))
                         for i in range(self.samples):
                             pred[i] = sess.run(self.predicter_fake_b, feed_dict={
                                 self.input_a: inputs['in']})
-                            print(pred[i].shape)
 
                     else:
                         inputs = {
